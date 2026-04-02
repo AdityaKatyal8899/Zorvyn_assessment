@@ -19,7 +19,7 @@ class RecordUpdate(BaseModel):
     amount: Optional[float] = None
     type: Optional[RecordType] = None
     category: Optional[str] = None
-    date: Optional[datetime.date] = None
+    date: Optional[datetime] = None
     notes: Optional[str] = None
 
     

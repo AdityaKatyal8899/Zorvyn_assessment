@@ -1,4 +1,3 @@
-# app/routers/records.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
@@ -8,7 +7,9 @@ from app.services import record_service
 from app.core.rbac import admin_only, admin_analyst
 from app.models.user import User
 
+
 router = APIRouter(prefix="/records", tags=["records"])
+
 
 @router.post("/", response_model=RecordResponse, status_code=status.HTTP_201_CREATED)
 def create_record(
@@ -22,6 +23,7 @@ def create_record(
     """
     return record_service.create_record(db=db, record=record, current_user=current_user)
 
+
 @router.get("/", response_model=List[RecordResponse])
 def list_records(
     skip: int = 0, 
@@ -34,6 +36,7 @@ def list_records(
     # RBAC: Admin + Analyst (read-only access)
     """
     return record_service.get_records(db=db, skip=skip, limit=limit)
+
 
 @router.get("/{record_id}", response_model=RecordResponse)
 def get_record(
@@ -50,6 +53,7 @@ def get_record(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Record not found")
     return db_record
 
+
 @router.patch("/{record_id}", response_model=RecordResponse)
 def update_record(
     record_id: int, 
@@ -65,6 +69,7 @@ def update_record(
     if not db_record:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Record not found")
     return db_record
+
 
 @router.delete("/{record_id}")
 def delete_record(

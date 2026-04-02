@@ -1,7 +1,6 @@
-from fastapi import APIRouter
+# from fastapi import APIRouter
+# router = APIRouter()
 
-router = APIRouter()
-
-@router.get("/", tags=["rooter"])
-def root():
-    return {'message': "Hi!"}
+# @router.get("/", tags=["rooter"])
+# def root():
+#     return {'message': "Hi!"}

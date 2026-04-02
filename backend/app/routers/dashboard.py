@@ -1,4 +1,3 @@
-# app/routers/dashboard.py
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from typing import List, Dict
@@ -8,7 +7,9 @@ from app.services import dashboard_service
 from app.core.rbac import admin_analyst, all_roles
 from app.models.user import User
 
+
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
+
 
 @router.get("/summary", response_model=SummaryResponse)
 def get_summary(
@@ -21,6 +22,7 @@ def get_summary(
     """
     return dashboard_service.get_summary(db=db)
 
+
 @router.get("/categories", response_model=Dict[str, float])
 def get_category_breakdown(
     db: Session = Depends(get_db), 
@@ -31,6 +33,7 @@ def get_category_breakdown(
     # RBAC: Admin + Analyst (read-only access)
     """
     return dashboard_service.get_category_breakdown(db=db)
+
 
 @router.get("/recent", response_model=List[RecentRecordResponse])
 def get_recent_activity(

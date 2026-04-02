@@ -1,4 +1,3 @@
-# app/models/record.py
 import enum
 from sqlalchemy import Column, Integer, Numeric,String, Float, ForeignKey, Enum, Date, DateTime, CheckConstraint
 from sqlalchemy.orm import relationship
@@ -10,9 +9,10 @@ class RecordType(str, enum.Enum):
     income = "income"
     expense = "expense"
 
+
 class Record(Base):
     __tablename__ = "records"
-
+    
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     amount = Column(Numeric(10, 2), nullable=False)
@@ -21,8 +21,6 @@ class Record(Base):
     date = Column(Date, nullable=False)
     notes = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    # Relationship with User model
     user = relationship("User", back_populates="records")
 
 __table_args__ = (

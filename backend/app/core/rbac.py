@@ -1,24 +1,30 @@
 # app/core/rbac.py
-from fastapi import HTTPException, Depends, status
+from fastapi import HTTPException, Depends, status, Request
 from app.models.user import User, UserRole, UserStatus
 from typing import List
 # Mock function as requested - for now, just returns a mock user with "admin" role
 # In a real app, this would decode a JWT and fetch the user from the database
 
-class CurrenUser:
+class CurrentUser:
     def __init__(self, id: int, role: UserRole, status: UserStatus):
         self.id = id
         self.role = role
         self.status = status
 
-def get_current_user() -> User:
-    # Creating a mock admin user for demonstration
-    mock_user = User(
+
+def get_current_user(request: Request):
+    role_header = request.headers.get("x-mock-role", "admin")
+
+    try:
+        role = UserRole(role_header)
+    except ValueError:
+        role = UserRole.admin
+
+    return CurrentUser(
         id=1,
-        role=UserRole.admin,
+        role=role,
         status=UserStatus.active
     )
-    return mock_user
 
 class RoleChecker:
     def __init__(self, allowed_roles: List[UserRole]):

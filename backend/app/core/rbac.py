@@ -34,3 +34,8 @@ class RoleChecker:
 
 def require_role(allowed_roles: list):
     return Depends(RoleChecker(allowed_roles))
+
+# RBAC Aliases
+admin_only = require_role([UserRole.admin])
+admin_analyst = require_role([UserRole.admin, UserRole.analyst])
+all_roles = require_role([UserRole.admin, UserRole.analyst, UserRole.viewer])

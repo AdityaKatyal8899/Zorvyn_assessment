@@ -1,5 +1,6 @@
 # app/main.py
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.routers import users, records, dashboard
 from app.db.session import engine
 from app.db.base import Base
@@ -12,6 +13,15 @@ app = FastAPI(
     title="Financial Dashboard API",
     description="Backend for a financial dashboard with RBAC, focused on Admin functionality.",
     version="1.0.0"
+)
+
+# CORS configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins for the debug UI
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Include Routers

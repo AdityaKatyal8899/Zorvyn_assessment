@@ -1,5 +1,5 @@
 # app/schemas/dashboard.py
-from pydantic import BaseModel
+from pydantic import BaseModel, RootModel
 from typing import Dict, List, Optional
 from datetime import date
 from app.models.record import RecordType
@@ -10,10 +10,9 @@ class SummaryResponse(BaseModel):
     total_expense: float
     net_balance: float
 
-class CategoryResponse(BaseModel):
+class CategoryResponse(RootModel):
     """Category-wise breakdown of financial data."""
-    # Using a simple dictionary response as requested
-    __root__: Dict[str, float]
+    root: Dict[str, float]
 
 class RecentRecordResponse(BaseModel):
     """Minimal record fields for dashboard view."""

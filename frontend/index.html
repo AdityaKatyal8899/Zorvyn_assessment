@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Dashboard Debug UI</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f7f6;
+        }
+        h1 { border-bottom: 2px solid #333; padding-bottom: 10px; }
+        h2 { color: #2c3e50; margin-top: 0; }
+        section {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .controls { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        button:hover { background-color: #2980b9; }
+        button.secondary { background-color: #95a5a6; }
+        button.secondary:hover { background-color: #7f8c8d; }
+        button.danger { background-color: #e74c3c; }
+        input, select, textarea {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 5px;
+        }
+        pre {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            min-height: 50px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .role-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: #f1c40f;
+            color: #333;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .form-group { margin-bottom: 10px; display: flex; flex-direction: column; max-width: 300px; }
+        .form-group label { font-size: 14px; margin-bottom: 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h1>Financial Dashboard Debug UI</h1>
+
+    <!-- 1. Role Simulation Section -->
+    <section>
+        <h2>Role Simulation</h2>
+        <div class="role-badge">Current Role: <span id="current-role-display">Admin</span></div>
+        <p><small>Note: This selection is purely visual for tracking. Use this to remember which role you're currently simulating in the backend mock.</small></p>
+        <div class="controls">
+            <select id="role-selector" onchange="updateRoleDisplay()">
+                <option value="admin">Admin</option>
+                <option value="analyst">Analyst</option>
+                <option value="viewer">Viewer</option>
+            </select>
+        </div>
+    </section>
+
+    <!-- 2. Dashboard Section -->
+    <section>
+        <h2>Dashboard APIs</h2>
+        <div class="controls">
+            <button onclick="getSummary()">Fetch Summary</button>
+            <button onclick="getCategories()">Fetch Categories</button>
+            <button onclick="getRecent()">Fetch Recent</button>
+            <button class="secondary" onclick="clearOutput('dashboard')">Clear</button>
+        </div>
+        <div id="dashboard-outputs">
+            <h3>Summary Output:</h3>
+            <pre id="summary-output">Click "Fetch Summary" to see results</pre>
+            <h3>Categories Output:</h3>
+            <pre id="categories-output">Click "Fetch Categories" to see results</pre>
+            <h3>Recent Records Output:</h3>
+            <pre id="recent-output">Click "Fetch Recent" to see results</pre>
+        </div>
+    </section>
+
+    <!-- 3. Records Section -->
+    <section>
+        <h2>Record Management APIs</h2>
+        <div class="controls">
+            <button onclick="getRecords()">Fetch All Records</button>
+            <input type="number" id="record-id-input" placeholder="Enter Record ID">
+            <button onclick="getRecordById()">Fetch Record by ID</button>
+            <button class="danger" onclick="deleteRecord()">Delete Record by ID</button>
+            <button class="secondary" onclick="clearOutput('records')">Clear</button>
+        </div>
+        <h3>Records Output:</h3>
+        <pre id="records-output">Results will appear here...</pre>
+    </section>
+
+    <!-- 4. Create Record Section -->
+    <section>
+        <h2>Create New Record (Admin Only)</h2>
+        <div class="form-group">
+            <label for="create-amount">Amount:</label>
+            <input type="number" id="create-amount" step="0.01" value="100.00">
+        </div>
+        <div class="form-group">
+            <label for="create-type">Type:</label>
+            <select id="create-type">
+                <option value="expense">Expense</option>
+                <option value="income">Income</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="create-category">Category:</label>
+            <input type="text" id="create-category" placeholder="e.g., Food, Salary">
+        </div>
+        <div class="form-group">
+            <label for="create-date">Date:</label>
+            <input type="date" id="create-date">
+        </div>
+        <div class="form-group">
+            <label for="create-notes">Notes (Optional):</label>
+            <textarea id="create-notes" rows="2"></textarea>
+        </div>
+        <button onclick="createRecord()">Create Record</button>
+        <h3>Response:</h3>
+        <pre id="create-output">Response will appear here...</pre>
+    </section>
+
+    <script>
+        const BASE_URL = "http://127.0.0.1:8000";
+
+        // Set default date to today
+        document.getElementById('create-date').valueAsDate = new Date();
+
+        function updateRoleDisplay() {
+            const selectedRole = document.getElementById('role-selector').value;
+            const capitalizedRole = selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1);
+            document.getElementById('current-role-display').innerText = capitalizedRole;
+        }
+
+        function clearOutput(section) {
+            if (section === 'dashboard') {
+                document.getElementById("summary-output").innerText = "Cleared";
+                document.getElementById("categories-output").innerText = "Cleared";
+                document.getElementById("recent-output").innerText = "Cleared";
+            } else if (section === 'records') {
+                document.getElementById("records-output").innerText = "Cleared";
+            }
+        }
+
+        async function handleResponse(response, elementId) {
+            const el = document.getElementById(elementId);
+            try {
+                const data = await response.json();
+                if (!response.ok) {
+                    el.style.color = "#ff6b6b";
+                    el.innerText = `HTTP Error ${response.status}: ${JSON.stringify(data, null, 2)}`;
+                } else {
+                    el.style.color = "#ecf0f1";
+                    el.innerText = JSON.stringify(data, null, 2);
+                }
+            } catch (err) {
+                if (response.status === 204 || response.status === 200) {
+                   el.innerText = `Success (${response.status})`;
+                } else {
+                   el.innerText = `Error parsing response: ${err}`;
+                }
+            }
+        }
+
+        // --- DASHBOARD FUNCTIONS ---
+
+        async function getSummary() {
+            try {
+                const res = await fetch(`${BASE_URL}/dashboard/summary`);
+                await handleResponse(res, "summary-output");
+            } catch (err) {
+                document.getElementById("summary-output").innerText = "Connection Error: " + err;
+            }
+        }
+
+        async function getCategories() {
+            try {
+                const res = await fetch(`${BASE_URL}/dashboard/categories`);
+                await handleResponse(res, "categories-output");
+            } catch (err) {
+                document.getElementById("categories-output").innerText = "Connection Error: " + err;
+            }
+        }
+
+        async function getRecent() {
+            try {
+                const res = await fetch(`${BASE_URL}/dashboard/recent`);
+                await handleResponse(res, "recent-output");
+            } catch (err) {
+                document.getElementById("recent-output").innerText = "Connection Error: " + err;
+            }
+        }
+
+        // --- RECORD FUNCTIONS ---
+
+        async function getRecords() {
+            try {
+                const res = await fetch(`${BASE_URL}/records/`);
+                await handleResponse(res, "records-output");
+            } catch (err) {
+                document.getElementById("records-output").innerText = "Connection Error: " + err;
+            }
+        }
+
+        async function getRecordById() {
+            const id = document.getElementById("record-id-input").value;
+            if (!id) {
+                alert("Please enter a Record ID");
+                return;
+            }
+            try {
+                const res = await fetch(`${BASE_URL}/records/${id}`);
+                await handleResponse(res, "records-output");
+            } catch (err) {
+                document.getElementById("records-output").innerText = "Connection Error: " + err;
+            }
+        }
+
+        async function deleteRecord() {
+            const id = document.getElementById("record-id-input").value;
+            if (!id) {
+                alert("Please enter a Record ID to delete");
+                return;
+            }
+            if (!confirm(`Are you sure you want to delete Record ${id}?`)) return;
+
+            try {
+                const res = await fetch(`${BASE_URL}/records/${id}`, { method: 'DELETE' });
+                await handleResponse(res, "records-output");
+            } catch (err) {
+                document.getElementById("records-output").innerText = "Connection Error: " + err;
+            }
+        }
+
+        async function createRecord() {
+            const payload = {
+                amount: parseFloat(document.getElementById("create-amount").value),
+                type: document.getElementById("create-type").value,
+                category: document.getElementById("create-category").value,
+                date: document.getElementById("create-date").value,
+                notes: document.getElementById("create-notes").value || null
+            };
+
+            const el = document.getElementById("create-output");
+            el.innerText = "Sending request...";
+
+            try {
+                const res = await fetch(`${BASE_URL}/records/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                await handleResponse(res, "create-output");
+            } catch (err) {
+                el.innerText = "Connection Error: " + err;
+            }
+        }
+    </script>
+</body>
+</html>
